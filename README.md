@@ -1,5 +1,3 @@
-# ComfyUI-Kaleido
-Creative Prompt Generator
 # 🌌 ComfyUI-Kaleido (万花筒·全能创意引擎)
 
 **ComfyUI-Kaleido** 是一套基于本地大语言模型 (Ollama) 的全流程 AIGC 创意辅助节点组。它内置了 **160+ 美学流派**、**70+ 技术媒介**、**16型人格思维引擎** 以及 **影视/音乐/设计** 领域的专业知识库 (RAG)。
