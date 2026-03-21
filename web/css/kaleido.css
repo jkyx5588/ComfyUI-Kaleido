@@ -1,0 +1,136 @@
+/* 全屏遮罩 */
+.kaleido-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(10, 10, 12, 0.9); backdrop-filter: blur(15px);
+    z-index: 10000; display: flex; justify-content: center; align-items: center;
+    opacity: 0; transition: opacity 0.3s ease;
+    font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; color: #fff;
+}
+.kaleido-overlay.show { opacity: 1; }
+
+/* 主窗口 */
+.kaleido-modal {
+    width: 85%; max-width: 1400px; height: 85%;
+    background: linear-gradient(145deg, #1e1e24, #121215);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.kaleido-ui-overlay.show .kaleido-modal { transform: translateY(0) scale(1); }
+
+/* 头部栏 */
+.kaleido-header {
+    padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; align-items: center; gap: 20px; background: rgba(0,0,0,0.2); z-index: 10001;
+}
+.kaleido-title { margin: 0; color: #fff; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.kaleido-badge { background: #8b5cf6; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; letter-spacing: 1px;}
+.kaleido-search {
+    flex-grow: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 20px; border-radius: 8px; color: #fff; font-size: 15px; outline: none; transition: all 0.3s;
+}
+.kaleido-search:focus { background: rgba(255,255,255,0.08); border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
+.kaleido-close { background: none; border: none; color: #888; font-size: 32px; cursor: pointer; transition: 0.2s; line-height: 1; }
+.kaleido-close:hover { color: #fff; transform: scale(1.1); }
+
+/* 网格场景 */
+.kaleido-scene {
+    flex-grow: 1; padding: 40px; overflow-y: auto; overflow-x: hidden;
+    perspective: 2000px; /* 激活3D视界 */
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 30px; align-items: start;
+}
+.kaleido-scene::-webkit-scrollbar { width: 8px; }
+.kaleido-scene::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+/* 🔴 核心容器：去掉了死板的CSS transform，完全交由JS控制 */
+.k-item-wrapper {
+    position: relative; width: 220px; height: 330px;
+    cursor: pointer; transform-style: preserve-3d;
+    will-change: transform; /* 提升渲染性能 */
+}
+.k-item-wrapper:hover:not(.expanded) { z-index: 10; }
+
+/* 封面设计 */
+.k-cover {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: #1a1a1f; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 2;
+    border: 1px solid rgba(255,255,255,0.05);
+    transform-style: preserve-3d; /* 保持3D层级 */
+}
+.k-cover img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: all 0.4s; }
+.k-item-wrapper:hover:not(.expanded) .k-cover img { transform: scale(1.05); opacity: 1; }
+
+/* 渐变遮罩 */
+.k-cover::after {
+    content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 60%;
+    background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); pointer-events: none; z-index: 3;
+}
+
+/* 🌟 新增：全息流光特效 (Light Glare) */
+.k-cover::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
+    transform: skewX(-25deg); z-index: 4; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+}
+.k-item-wrapper:hover:not(.expanded) .k-cover::before {
+    opacity: 1; animation: glare-sweep 1.5s ease-in-out infinite;
+}
+@keyframes glare-sweep {
+    0% { left: -100%; } 100% { left: 200%; }
+}
+
+.k-cover-title {
+    position: absolute; bottom: 15px; left: 15px; right: 15px; z-index: 5;
+    font-size: 15px; font-weight: 600; line-height: 1.3; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    transform: translateZ(30px); /* 让文字在3D旋转时漂浮起来 */
+}
+
+.kaleido-placeholder {
+    width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+    background: linear-gradient(135deg, #2a2a35, #111115); color: rgba(255,255,255,0.15); font-size: 48px; font-weight: 800;
+}
+
+/* 信息展开面板 */
+.k-info-panel {
+    position: absolute; top: 10px; left: 100%; width: 320px; height: calc(100% - 20px);
+    background: rgba(25, 25, 30, 0.95); backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.1); border-left: none;
+    border-radius: 0 12px 12px 0; padding: 25px; box-sizing: border-box;
+    display: flex; flex-direction: column;
+    transform-origin: left center; transform: rotateY(-90deg);
+    opacity: 0; pointer-events: none;
+    transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 30px 15px 40px rgba(0,0,0,0.6);
+}
+
+.kaleido-scene.has-expanded .k-item-wrapper:not(.expanded) {
+    opacity: 0.05; pointer-events: none; filter: blur(8px); transform: scale(0.9);
+}
+
+.k-item-wrapper.expanded { z-index: 1000; cursor: default; }
+.k-item-wrapper.expanded .k-cover {
+    box-shadow: -15px 25px 50px rgba(0,0,0,0.8);
+    border-radius: 12px 0 0 12px;
+    border-color: rgba(139,92,246,0.5);
+}
+.k-item-wrapper.expanded .k-info-panel {
+    transform: rotateY(0deg); opacity: 1; pointer-events: auto;
+}
+
+.k-info-tag { font-size: 13px; color: #a855f7; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px;}
+.k-info-name { font-size: 24px; font-weight: 700; margin: 0 0 15px 0; line-height: 1.2; color: #fff;}
+.k-info-desc { font-size: 14px; color: #bbb; line-height: 1.6; flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+.k-info-desc::-webkit-scrollbar { width: 4px; }
+.k-info-desc::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+.k-select-btn {
+    width: 100%; padding: 14px; background: #6366f1; color: white; margin-top: 15px;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: bold;
+    cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+.k-select-btn:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
+.k-select-btn:active { transform: translateY(0); }
